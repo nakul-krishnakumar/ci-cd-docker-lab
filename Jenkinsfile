@@ -24,7 +24,7 @@ pipeline {
 
         stage('Push Docker Image to DockerHub') {
             steps {
-                echo 'Logging into DockerHub and pushing image...'
+            echo 'Logging into DockerHub and pushing image...'
 
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub',
@@ -33,6 +33,10 @@ pipeline {
                 )]) {
 
                     sh '''
+                    export DOCKER_CONFIG=$WORKSPACE/.docker
+                    mkdir -p $DOCKER_CONFIG
+                    echo '{}' > $DOCKER_CONFIG/config.json
+
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
                     docker tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
