@@ -33,10 +33,13 @@ pipeline {
                     sh '''
                         export DOCKER_CONFIG=$WORKSPACE/docker-temp
                         mkdir -p $DOCKER_CONFIG
-                        echo '{"credsStore":""}' > $DOCKER_CONFIG/config.json
-                        echo $DOCKER_PASS | docker --config $DOCKER_CONFIG login -u $DOCKER_USER --password-stdin
-                        docker tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
-                        docker push $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+
+                        # Build base64 auth token and write directly — no docker login needed
+                        AUTH=$(echo -n "$DOCKER_USER:$DOCKER_PASS" | base64 -w 0)
+                        echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"$AUTH\"}}}" > $DOCKER_CONFIG/config.json
+
+                        docker --config $DOCKER_CONFIG tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+                        docker --config $DOCKER_CONFIG push $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
                     '''
                 }
             }
