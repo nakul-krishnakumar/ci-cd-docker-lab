@@ -34,12 +34,16 @@ pipeline {
                         export DOCKER_CONFIG=$WORKSPACE/docker-temp
                         mkdir -p $DOCKER_CONFIG
 
-                        # Build base64 auth token and write directly — no docker login needed
-                        AUTH=$(echo -n "$DOCKER_USER:$DOCKER_PASS" | base64 -w 0)
-                        echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"$AUTH\"}}}" > $DOCKER_CONFIG/config.json
+                        # Use Python to safely build config.json — avoids shell quoting issues
+                        python3 -c "
+        import base64, json, os
+        auth = base64.b64encode((os.environ['DOCKER_USER'] + ':' + os.environ['DOCKER_PASS']).encode()).decode()
+        config = {'auths': {'https://index.docker.io/v1/': {'auth': auth}}}
+        with open(os.environ['DOCKER_CONFIG'] + '/config.json', 'w') as f:
+            json.dump(config, f)
+        "
 
-                        docker --config $DOCKER_CONFIG tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
-                        docker --config $DOCKER_CONFIG push $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+                        docker --config $DOCKER_CONFIG push 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest
                     '''
                 }
             }
