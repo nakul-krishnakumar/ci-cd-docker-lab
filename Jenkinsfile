@@ -37,7 +37,7 @@ pipeline {
                     mkdir -p $DOCKER_CONFIG
                     echo '{}' > $DOCKER_CONFIG/config.json
 
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    echo $DOCKER_PASS | docker --config $WORKSPACE/docker-temp login -u $DOCKER_USER --password-stdin
 
                     docker tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
 
