@@ -24,24 +24,19 @@ pipeline {
 
         stage('Push Docker Image to DockerHub') {
             steps {
-            echo 'Logging into DockerHub and pushing image...'
-
+                echo 'Logging into DockerHub and pushing image...'
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-
                     sh '''
-                    export DOCKER_CONFIG=$WORKSPACE/.docker
-                    mkdir -p $DOCKER_CONFIG
-                    echo '{}' > $DOCKER_CONFIG/config.json
-
-                    echo $DOCKER_PASS | docker --config $WORKSPACE/docker-temp login -u $DOCKER_USER --password-stdin
-
-                    docker tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
-
-                    docker push $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+                        export DOCKER_CONFIG=$WORKSPACE/docker-temp
+                        mkdir -p $DOCKER_CONFIG
+                        echo '{"credsStore":""}' > $DOCKER_CONFIG/config.json
+                        echo $DOCKER_PASS | docker --config $DOCKER_CONFIG login -u $DOCKER_USER --password-stdin
+                        docker tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+                        docker push $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
                     '''
                 }
             }
