@@ -1,37 +1,52 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-        IMAGE_NAME = "2023bcs0010nakul/bcs10-ci-cd-docker-lab"
-    }
-
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Source Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/nakul-krishnakumar/ci-cd-docker-lab.git'
+                git 'https://github.com/nakul-krishnakumar/ci-cd-docker-lab.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                echo 'Building Docker image...'
+                sh 'docker build -t 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest .'
             }
         }
 
-        stage('Docker Login') {
-          steps {
-            withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-              sh 'docker login -u $USER -p $PASS'
-            }
-          }
-        }
-
-        stage('Push Image') {
+        stage('Test Application') {
             steps {
-                sh 'docker push $IMAGE_NAME'
+                echo 'No automated tests required for this static web application'
             }
+        }
+
+        stage('Push Docker Image to DockerHub') {
+            steps {
+                echo 'Logging into DockerHub and pushing image...'
+
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
+                    docker tag 2023bcs0010nakul/bcs10-ci-cd-docker-lab:latest $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+
+                    docker push $DOCKER_USER/bcs10-ci-cd-docker-lab:latest
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'CI/CD Pipeline completed'
         }
     }
 }
